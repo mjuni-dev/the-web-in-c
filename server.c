@@ -10,6 +10,28 @@
 #define SMALL_BUFFER 1024
 #define BIG_BUFFER 8192
 
+
+void send_response(int client_fd, 
+		   const char *status, 
+		   const char *content_type, 
+		   const char * body) {
+	char response[BIG_BUFFER];
+	int length = snprintf(response, sizeof(response),
+			"HTTP/1.1 %s\r\n"
+			"Content-Type: %s\r\n"
+			"Content-Length: %zu\r\n"
+			"\r\n%s",
+			status, content_type, strlen(body), body);
+
+	// Write to the socket
+	int w = write(client_fd, response, length);
+	if (w < 0) {
+		perror("write()");
+		close(client_fd);
+		pthread_exit(NULL);
+	}
+}
+
 void handle_request(int client_fd){
 	char buffer[BIG_BUFFER], 
 	     method[SMALL_BUFFER], 
@@ -23,19 +45,20 @@ void handle_request(int client_fd){
 	printf("REQUEST:\n%s\n", buffer);
 
 	sscanf(buffer, "%s %s %s", method, path, protocol);
-	printf("METHOD: %s\n PATH: %s\n PROTOCOL: %s\n", method, path, protocol);
+	printf("METHOD: %s\nPATH: %s\nPROTOCOL: %s\n", method, path, protocol);
 
-	// Write to the socket
-	char resp[] = "HTTP/1.1 200 OK\r\n"
-                  "Server: webserver-c\r\n"
-                  "Content-type: text/html\r\n\r\n"
-                  "<html>hello, world</html>\r\n";
-	int w = write(client_fd, resp, strlen(resp));
-	if (w < 0) {
-		perror("write()");
-		close(client_fd);
-		pthread_exit(NULL);
+	// check for query string params
+	char *query_str = strchr(path, '?');
+	char query[SMALL_BUFFER] = {0};
+	if (query_str) {
+		strcpy(query, query_str + 1);
+		printf(" >> query_str: %s\n", query);		
 	}
+
+	send_response(client_fd, 
+		      "200 OK", 
+		      "text/html", 
+		      "<html><h1>Hello, World!</h1></html>\r\n");
 
 	// Close socket 
 	close(client_fd);
@@ -47,7 +70,7 @@ void *client_thread(void *arg) {
 	
 	handle_request(client_fd);
 	
-	// Terminate the thread
+	// Terminate the thread 
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -57,7 +80,7 @@ int main() {
 	socklen_t 		addrlen;
 	struct sockaddr_in	host_addr;
 
-	// SOCKET -> BIND -> LISTEN -> ACCEPT -> READ/WRITE
+	// SOCKET -> BIND -> LISTEN -> ACCEPT -> READ -> WRITE
 	printf("\n >> starting server...\n\n");
 
 	// Create the socket
@@ -88,22 +111,24 @@ int main() {
 	printf(" >> listening on http://localhost:%d\n", PORT);
 
 	for (;;) {
-		int *client_fd, c;
+		int *client_fd;
 
 		client_fd = malloc(sizeof(int));
 
+		// Accept incoming connections
+		*client_fd = accept(server_fd, (struct sockaddr *)&host_addr, &addrlen);
 		if (client_fd < 0) {
 			perror("accept()");
 			close(*(int *)client_fd);
 			continue;
 		}
-		printf(" >> connection accepted; fd: %i\n", *(int *)client_fd);
-		
-		// Accept incoming connections
-		*client_fd = accept(server_fd, (struct sockaddr *)&host_addr, &addrlen);
+		printf("\n\n >>>> CONNECTION ACCEPTED; CLIENT_FD: %i <<<<\n", *(int *)client_fd);
 
+		// Spawn a new thread to handle the request
 		pthread_t thread_id;
 		pthread_create(&thread_id, NULL, client_thread, client_fd);
+
+		// Mark thread as detached
 		pthread_detach(thread_id);
 	}
 
