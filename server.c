@@ -7,36 +7,47 @@
 #include <arpa/inet.h>
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
+#define SMALL_BUFFER 1024
+#define BIG_BUFFER 8192
 
-void *client_thread(void *arg) {
-	char buffer[BUFFER_SIZE];
-	char resp[] = "HTTP/1.0 200 OK\r\n"
+void handle_request(int client_fd){
+	char buffer[BIG_BUFFER], 
+	     method[SMALL_BUFFER], 
+	     path[SMALL_BUFFER], 
+	     protocol[SMALL_BUFFER];
+
+	memset(buffer, 0, sizeof(buffer));
+
+	// Read from the socket
+	read(client_fd, buffer, sizeof(buffer) - 1);
+	printf("REQUEST:\n%s\n", buffer);
+
+	sscanf(buffer, "%s %s %s", method, path, protocol);
+	printf("METHOD: %s\n PATH: %s\n PROTOCOL: %s\n", method, path, protocol);
+
+	// Write to the socket
+	char resp[] = "HTTP/1.1 200 OK\r\n"
                   "Server: webserver-c\r\n"
                   "Content-type: text/html\r\n\r\n"
                   "<html>hello, world</html>\r\n";
-	int client_fd = *(int *)arg;
-	free(arg);
-	
-	// Read from the socket
-	int val = read(client_fd, buffer, BUFFER_SIZE);
-	if (val < 0) {
-		perror("read()");
-		close(client_fd);
-		pthread_exit(NULL);
-		return NULL;
-	}
-	
-	// Write to the socket
 	int w = write(client_fd, resp, strlen(resp));
 	if (w < 0) {
 		perror("write()");
 		close(client_fd);
 		pthread_exit(NULL);
-		return NULL;
 	}
 
+	// Close socket 
 	close(client_fd);
+}
+
+void *client_thread(void *arg) {
+	int client_fd = *(int *)arg;
+	free(arg);
+	
+	handle_request(client_fd);
+	
+	// Terminate the thread
 	pthread_exit(NULL);
 	return NULL;
 }
