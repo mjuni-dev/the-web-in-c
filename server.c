@@ -11,9 +11,9 @@
 #define BIG_BUFFER 8192
 
 
-void send_response(int client_fd, 
-		   const char *status, 
-		   const char *content_type, 
+void send_response(int client_fd,
+		   const char *status,
+		   const char *content_type,
 		   const char * body) {
 	char response[BIG_BUFFER];
 	int length = snprintf(response, sizeof(response),
@@ -24,18 +24,13 @@ void send_response(int client_fd,
 			status, content_type, strlen(body), body);
 
 	// Write to the socket
-	int w = write(client_fd, response, length);
-	if (w < 0) {
-		perror("write()");
-		close(client_fd);
-		pthread_exit(NULL);
-	}
+	write(client_fd, response, length);
 }
 
 void handle_request(int client_fd){
-	char buffer[BIG_BUFFER], 
-	     method[SMALL_BUFFER], 
-	     path[SMALL_BUFFER], 
+	char buffer[BIG_BUFFER],
+	     method[SMALL_BUFFER],
+	     path[SMALL_BUFFER],
 	     protocol[SMALL_BUFFER];
 
 	memset(buffer, 0, sizeof(buffer));
@@ -52,25 +47,25 @@ void handle_request(int client_fd){
 	char query[SMALL_BUFFER] = {0};
 	if (query_str) {
 		strcpy(query, query_str + 1);
-		printf(" >> query_str: %s\n", query);		
+		printf(" >> query_str: %s\n", query);
 	}
 
-	send_response(client_fd, 
-		      "200 OK", 
-		      "text/html", 
+	send_response(client_fd,
+		      "200 OK",
+		      "text/html",
 		      "<html><h1>Hello, World!</h1></html>\r\n");
 
-	// Close socket 
+	// Close socket
 	close(client_fd);
 }
 
 void *client_thread(void *arg) {
 	int client_fd = *(int *)arg;
 	free(arg);
-	
+
 	handle_request(client_fd);
-	
-	// Terminate the thread 
+
+	// Terminate the thread
 	pthread_exit(NULL);
 	return NULL;
 }
