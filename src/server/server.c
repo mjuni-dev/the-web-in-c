@@ -1,3 +1,5 @@
+/* server.c */
+
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -95,7 +97,7 @@ void *client_thread(void *arg) {
         return NULL;
 }
 
-int main() {
+int start_server() {
         int server_fd;
         socklen_t addrlen;
         struct sockaddr_in host_addr;
@@ -139,7 +141,7 @@ int main() {
                 // Accept incoming connections
                 *client_fd =
                     accept(server_fd, (struct sockaddr *)&host_addr, &addrlen);
-                if (client_fd < 0) {
+                if (*client_fd < 0) {
                         perror("accept()");
                         close(*(int *)client_fd);
                         continue;
