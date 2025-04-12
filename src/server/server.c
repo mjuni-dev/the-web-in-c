@@ -3,6 +3,7 @@
 #include "request.h"
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -10,19 +11,12 @@
 
 #define PORT 8080
 
-void *client_thread(void *arg) {
-        int client_fd = *(int *)arg;
-        free(arg);
+int server_fd = -1;
 
-        handle_request(client_fd);
-
-        // Terminate the thread
-        pthread_exit(NULL);
-        return NULL;
-}
+void *client_thread(void *arg);
+void handle_shutdown(int sig);
 
 int start_server() {
-        int server_fd;
         socklen_t addrlen;
         struct sockaddr_in host_addr;
 
@@ -57,6 +51,10 @@ int start_server() {
         }
         printf(" >> listening on http://localhost:%d\n", PORT);
 
+        // Gracefull shutdown
+        signal(SIGINT, handle_shutdown);  // ctrl+c
+        signal(SIGTERM, handle_shutdown); // kill
+        signal(SIGHUP, handle_shutdown);  // terminal disconnect
         for (;;) {
                 int *client_fd;
 
@@ -84,4 +82,24 @@ int start_server() {
         printf("\n >> ...closing socket\n\n");
         close(server_fd);
         return 0;
+}
+
+void *client_thread(void *arg) {
+        int client_fd = *(int *)arg;
+        free(arg);
+
+        handle_request(client_fd);
+
+        // Terminate the thread
+        pthread_exit(NULL);
+        return NULL;
+}
+
+void handle_shutdown(int sig) {
+        if (server_fd != -1) {
+                printf("\n >> SHUTTING DOWN SERVER <<\n");
+                close(server_fd);
+                server_fd = -1;
+        }
+        exit(0);
 }

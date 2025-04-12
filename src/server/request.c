@@ -10,10 +10,6 @@
 #define SMALL_BUFFER 1024
 #define BIG_BUFFER 8192
 
-void send_response(int client_fd, const char *status, const char *content_type,
-                   const char *body);
-void serve_static_file(int client_fd, const char *filepath);
-
 void handle_request(int client_fd) {
         char buffer[BIG_BUFFER];
         char method[SMALL_BUFFER], path[SMALL_BUFFER], protocol[SMALL_BUFFER];
@@ -48,15 +44,6 @@ void handle_request(int client_fd) {
 
         // Routing
         handle_route(client_fd, method, path, query, body);
-        // if (strcmp(method, "GET") == 0) {
-        //         if (strcmp(path, "/") == 0) {
-        //                 serve_static_file(client_fd, "/index.html");
-        //         } else {
-        //                 send_response(
-        //                     client_fd, "200 OK", "text/html",
-        //                     "<html><h1>Hello, World!</h1></html>\r\n");
-        //         }
-        // }
 
         // Close socket
         close(client_fd);
