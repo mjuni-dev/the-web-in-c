@@ -1,5 +1,6 @@
 /* server.c */
 
+#include "server.h"
 #include "request.h"
 #include <arpa/inet.h>
 #include <pthread.h>
@@ -14,9 +15,8 @@
 int server_fd = -1;
 
 void *client_thread(void *arg);
-void handle_shutdown(int sig);
 
-int start_server() {
+void start_server() {
         socklen_t addrlen;
         struct sockaddr_in host_addr;
 
@@ -27,7 +27,7 @@ int start_server() {
         server_fd = socket(AF_INET, SOCK_STREAM, 0);
         if (server_fd < 0) {
                 perror("socket()\n");
-                return -1;
+                exit(EXIT_FAILURE);
         }
         printf(" >> socket created; fd: %i\n", server_fd);
 
@@ -40,21 +40,17 @@ int start_server() {
         if (bind(server_fd, (struct sockaddr *)&host_addr, sizeof(host_addr)) <
             0) {
                 perror("bind()");
-                return -1;
+                exit(EXIT_FAILURE);
         }
         printf(" >> socket bound\n");
 
         // Listen for incoming connections
         if (listen(server_fd, 0) < 0) {
                 perror("listen()");
-                return -1;
+                exit(EXIT_FAILURE);
         }
         printf(" >> listening on http://localhost:%d\n", PORT);
 
-        // Gracefull shutdown
-        signal(SIGINT, handle_shutdown);  // ctrl+c
-        signal(SIGTERM, handle_shutdown); // kill
-        signal(SIGHUP, handle_shutdown);  // terminal disconnect
         for (;;) {
                 int *client_fd;
 
@@ -78,10 +74,6 @@ int start_server() {
                 // Mark thread as detached
                 pthread_detach(thread_id);
         }
-
-        printf("\n >> ...closing socket\n\n");
-        close(server_fd);
-        return 0;
 }
 
 void *client_thread(void *arg) {
@@ -95,7 +87,7 @@ void *client_thread(void *arg) {
         return NULL;
 }
 
-void handle_shutdown(int sig) {
+void shutdown_server(int sig) {
         if (server_fd != -1) {
                 printf("\n >> SHUTTING DOWN SERVER <<\n");
                 close(server_fd);
