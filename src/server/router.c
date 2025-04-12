@@ -1,5 +1,6 @@
 /* router.c */
 #include "router.h"
+#include "mime.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,7 +67,8 @@ void serve_file(int client_fd, const char *filepath) {
         fread(body, 1, size, file);
         body[size] = '\0';
 
-        send_response(client_fd, "200 OK", "text/html", body);
+        const char *mime_type = get_mime_type(filepath);
+        send_response(client_fd, "200 OK", mime_type, body);
         fclose(file);
         free(body);
 }
@@ -92,7 +94,7 @@ void handle_root(int client_fd, const char *query, const char *body) {
 }
 
 void handle_static(int client_fd, const char *filepath) {
-        printf(" >> HANDLE_STATIC()\n");
+        printf(" >> HANDLE_STATIC(): %s\n", filepath);
         // sanitize file path to prevent directory traversal
         if (strstr(filepath, "..")) {
                 send_response(client_fd, "403 Forbidden", "text/html",
