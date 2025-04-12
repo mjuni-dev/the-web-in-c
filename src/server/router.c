@@ -93,6 +93,12 @@ void handle_root(int client_fd, const char *query, const char *body) {
 
 void handle_static(int client_fd, const char *filepath) {
         printf(" >> HANDLE_STATIC()\n");
+        // sanitize file path to prevent directory traversal
+        if (strstr(filepath, "..")) {
+                send_response(client_fd, "403 Forbidden", "text/html",
+                              "<h1>403 - Forbidden</h1>");
+                return;
+        }
         char fullpath[SMALL_BUFFER] = "./src/web";
         strcat(fullpath, filepath);
         printf(" >> FILE_PATH: %s\n", filepath);
