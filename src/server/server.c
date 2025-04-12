@@ -1,90 +1,14 @@
 /* server.c */
 
+#include "request.h"
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #define PORT 8080
-#define SMALL_BUFFER 1024
-#define BIG_BUFFER 8192
-
-void send_response(int client_fd, const char *status, const char *content_type,
-                   const char *body) {
-        char response[BIG_BUFFER];
-        int length = snprintf(response, sizeof(response),
-                              "HTTP/1.1 %s\r\n"
-                              "Content-Type: %s\r\n"
-                              "Content-Length: %zu\r\n"
-                              "\r\n%s",
-                              status, content_type, strlen(body), body);
-
-        // Write to the socket
-        write(client_fd, response, length);
-}
-
-void serve_static_file(int client_fd, const char *filepath) {
-        char fullpath[SMALL_BUFFER] = ".";
-        strcat(fullpath, filepath);
-
-        FILE *file = fopen(fullpath, "r");
-        if (!file) {
-                send_response(client_fd, "404 Not Found", "text/html",
-                              "<html><h1>404 - File Not Found</h1></html>\r\n");
-                return;
-        }
-
-        fseek(file, 0, SEEK_END);
-        size_t size = ftell(file);
-        rewind(file);
-
-        char *body = malloc(size + 1);
-        fread(body, 1, size, file);
-        body[size] = '\0';
-
-        send_response(client_fd, "200 OK", "text/html", body);
-        fclose(file);
-        free(body);
-}
-
-void handle_request(int client_fd) {
-        char buffer[BIG_BUFFER], method[SMALL_BUFFER], path[SMALL_BUFFER],
-            protocol[SMALL_BUFFER];
-
-        memset(buffer, 0, sizeof(buffer));
-
-        // Read from the socket
-        read(client_fd, buffer, sizeof(buffer) - 1);
-        printf("REQUEST:\n%s\n", buffer);
-
-        sscanf(buffer, "%s %s %s", method, path, protocol);
-        printf("METHOD: %s\nPATH: %s\nPROTOCOL: %s\n", method, path, protocol);
-
-        // check for query string params
-        char *query_str = strchr(path, '?');
-        char query[SMALL_BUFFER] = {0};
-        if (query_str) {
-                strcpy(query, query_str + 1);
-                printf(" >> query_str: %s\n", query);
-        }
-
-        // Routing
-        if (strcmp(method, "GET") == 0) {
-                if (strcmp(path, "/") == 0) {
-                        serve_static_file(client_fd, "/index.html");
-                } else {
-                        send_response(
-                            client_fd, "200 OK", "text/html",
-                            "<html><h1>Hello, World!</h1></html>\r\n");
-                }
-        }
-
-        // Close socket
-        close(client_fd);
-}
 
 void *client_thread(void *arg) {
         int client_fd = *(int *)arg;
