@@ -26,6 +26,8 @@ void insert_mime(const char *ext, const char *type) {
         Mime *entry = malloc(sizeof(Mime));
         entry->ext = strdup(ext);
         entry->type = strdup(type);
+
+        // chaining to handle collisions
         entry->next = mime_table[i];
         mime_table[i] = entry;
 }

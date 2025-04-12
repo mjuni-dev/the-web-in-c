@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -pthread -g
-OBJ = bin/main.o bin/server.o bin/request.o bin/router.o bin/mime.o
+OBJ = bin/main.o bin/server.o bin/request.o bin/router.o bin/mime.o bin/response.o
 
 all: server
 
@@ -21,6 +21,9 @@ bin/router.o: src/server/router.c src/server/router.h
 
 bin/mime.o: src/server/mime.c src/server/mime.h
 	$(CC) $(CFLAGS) -c src/server/mime.c -o bin/mime.o
+
+bin/response.o: src/server/response.c src/server/response.h
+	$(CC) $(CFLAGS) -c src/server/response.c -o bin/response.o
 
 clean:
 	rm -f *.o bin/*.o bin/server

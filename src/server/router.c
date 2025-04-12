@@ -1,6 +1,7 @@
 /* router.c */
 #include "router.h"
 #include "mime.h"
+#include "response.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,21 +72,6 @@ void serve_file(int client_fd, const char *filepath) {
         send_response(client_fd, "200 OK", mime_type, body);
         fclose(file);
         free(body);
-}
-
-void send_response(int client_fd, const char *status, const char *content_type,
-                   const char *body) {
-        printf(" >> SEND_RESPONSE()\n");
-        char response[BIG_BUFFER];
-        int length = snprintf(response, sizeof(response),
-                              "HTTP/1.1 %s\r\n"
-                              "Content-Type: %s\r\n"
-                              "Content-Length: %zu\r\n"
-                              "\r\n%s",
-                              status, content_type, strlen(body), body);
-
-        // Write to the socket
-        write(client_fd, response, length);
 }
 
 void handle_root(int client_fd, const char *query, const char *body) {
