@@ -11,8 +11,10 @@
 #define BIG_BUFFER 8192
 
 #define GET "GET"
+#define POST "POST"
 
 #define PUBLIC_ROUTE "/public/"
+#define FAVICON "/favicon.ico"
 
 typedef struct {
         const char *method;
@@ -20,13 +22,15 @@ typedef struct {
         void (*handler)(int, const char *, const char *);
 } Route;
 
-void send_response(int client_fd, const char *status, const char *type,
-                   const char *body);
 void serve_file(int client_fd, const char *filepath);
-void handle_root(int client_socket, const char *query, const char *body);
+void handle_get_root(int client_fd, const char *query, const char *body);
+void handle_get_signin(int client_fd, const char *query, const char *body);
+void handle_post_signin(int client_fd, const char *query, const char *body);
 void handle_static(int client_socket, const char *path);
 
-Route routes[] = {{"GET", "/", handle_root}};
+Route routes[] = {{GET, "/", handle_get_root},
+                  {GET, "/auth/signin", handle_get_signin},
+                  {POST, "/auth/signin", handle_post_signin}};
 
 void handle_route(int client_fd, const char *method, const char *path,
                   const char *query, const char *body) {
@@ -47,13 +51,20 @@ void handle_route(int client_fd, const char *method, const char *path,
                 return;
         }
 
+        // handle favicon
+        if (strcmp(method, GET) == 0 &&
+            strncmp(path, FAVICON, strlen(FAVICON)) == 0) {
+                handle_static(client_fd, "/public/img/favicon.ico");
+                return;
+        }
+
         // 404 not found
         // send_response
 }
 
 void serve_file(int client_fd, const char *filepath) {
         printf(" >> SERVE_FILE()\n");
-        FILE *file = fopen(filepath, "r");
+        FILE *file = fopen(filepath, "rb");
         if (!file) {
                 send_response(client_fd, "404 Not Found", "text/html",
                               "<h1>404 - Not Found</h1>");
@@ -63,19 +74,75 @@ void serve_file(int client_fd, const char *filepath) {
         fseek(file, 0, SEEK_END);
         size_t size = ftell(file);
         rewind(file);
+        printf(" >> SIZE: %zu\n", size);
+
+        if (size == 0) {
+                fclose(file);
+                send_response(client_fd, "204 No Content", "text/html",
+                              "<h1>No Content</h1>");
+                return;
+        }
 
         char *body = malloc(size + 1);
-        fread(body, 1, size, file);
-        body[size] = '\0';
+        if (!body) {
+                fclose(file);
+                send_response(client_fd, "500 Internal Server Error",
+                              "text/html", "<h1>Internal Server Error</h1>");
+                return;
+        }
+
+        size_t bytesRead = fread(body, 1, size, file);
+        fclose(file);
+        // body[size] = '\0';
+
+        if (bytesRead != size) {
+                free(body);
+                send_response(client_fd, "500 Internal Server Error",
+                              "text/html", "<h1>Internal Server Error</h1>");
+                return;
+        }
+        printf(" >> BYTESREAD: %zu\n", size);
 
         const char *mime_type = get_mime_type(filepath);
-        send_response(client_fd, "200 OK", mime_type, body);
-        fclose(file);
+        send_response_binary(client_fd, "200 OK", mime_type, body, size);
+        // send_response(client_fd, "200 OK", mime_type, body);
         free(body);
 }
 
-void handle_root(int client_fd, const char *query, const char *body) {
-        printf(" >> HANDLE_ROOT()\n");
+void handle_post_signin(int client_fd, const char *query, const char *body) {
+        printf(" >> HANDLE_POST_SIGNIN()\n");
+        char username[128] = {0};
+        char passwd[128] = {0};
+
+        char *pair = strtok((char *)body, "&");
+        while (pair) {
+                printf(" >> PAIR: %s\n", pair);
+                char key[128], val[128];
+                if (sscanf(pair, "%127[^=]=%127s", key, val) == 2) {
+                        if (strcmp(key, "username") == 0) {
+                                strncpy(username, val, sizeof(username) - 1);
+                        } else if (strcmp(key, "password") == 0) {
+                                strncpy(passwd, val, sizeof(passwd) - 1);
+                        }
+                }
+                pair = strtok(NULL, "&");
+        }
+
+        printf("Sign-in attemp: username: '%s', password: '%s'\n", username,
+               passwd);
+
+        char resp[512];
+        snprintf(resp, sizeof(resp), "<h1>Welcome, %s!</h1>", username);
+        send_response(client_fd, "200 OK", "text/html", resp);
+}
+
+void handle_get_signin(int client_fd, const char *query, const char *body) {
+        printf(" >> HANDLE_GET_SIGNIN()\n");
+        handle_static(client_fd, "/auth/signin.html");
+}
+
+void handle_get_root(int client_fd, const char *query, const char *body) {
+        printf(" >> HANDLE_GET_ROOT()\n");
         handle_static(client_fd, "/index.html");
 }
 
