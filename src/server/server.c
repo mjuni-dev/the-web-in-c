@@ -4,6 +4,7 @@
 #include "request.h"
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -87,8 +88,8 @@ void *client_thread(void *arg) {
 }
 
 void shutdown_server(int sig) {
-        if (server_fd != -1) {
-                printf("\n >> SHUTTING DOWN SERVER <<\n");
+        if ((sig == SIGINT || sig == SIGTERM) && server_fd != -1) {
+                printf("\n >> SHUTTING DOWN SERVER: FD %i <<\n", server_fd);
                 close(server_fd);
                 server_fd = -1;
         }

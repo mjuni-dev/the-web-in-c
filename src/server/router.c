@@ -111,6 +111,13 @@ void serve_file(int client_fd, const char *filepath) {
 
 void handle_post_signin(int client_fd, const char *query, const char *body) {
         printf(" >> HANDLE_POST_SIGNIN()\n");
+
+        // just removing warning from build for now.
+        // Will probably change the signature, I don't know that I will need a
+        // query for all handlers
+        if (query) {
+        }
+
         char username[128] = {0};
         char passwd[128] = {0};
 
@@ -138,11 +145,23 @@ void handle_post_signin(int client_fd, const char *query, const char *body) {
 
 void handle_get_signin(int client_fd, const char *query, const char *body) {
         printf(" >> HANDLE_GET_SIGNIN()\n");
+
+        // just removing warning from build for now.
+        // I may change the signature.  I don't know if I will need a body for
+        // get requests
+        if (query && body) {
+        }
         handle_static(client_fd, "/auth/signin.html");
 }
 
 void handle_get_root(int client_fd, const char *query, const char *body) {
         printf(" >> HANDLE_GET_ROOT()\n");
+
+        // just removing warning from build for now.
+        // I may change the signature.  I don't know if I will need a body for
+        // get requests
+        if (query && body) {
+        }
         handle_static(client_fd, "/index.html");
 }
 
