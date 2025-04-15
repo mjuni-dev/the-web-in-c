@@ -54,6 +54,7 @@ void start_server() {
         for (;;) {
                 int *client_fd;
 
+                // client_fd is freed in client_thread() function
                 client_fd = malloc(sizeof(int));
 
                 // Accept incoming connections

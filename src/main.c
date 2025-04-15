@@ -1,7 +1,7 @@
 /* main.c */
 
-#include "server/mime.h"
-#include "server/server.h"
+#include "mime.h"
+#include "server.h"
 #include <execinfo.h>
 #include <signal.h>
 #include <stdio.h>
@@ -28,6 +28,7 @@ int main() {
         signal(SIGABRT, handle_fatal_signal);
         signal(SIGFPE, handle_fatal_signal);
         signal(SIGILL, handle_fatal_signal);
+
         // allocate values commonly used
         init_mime_types();
 

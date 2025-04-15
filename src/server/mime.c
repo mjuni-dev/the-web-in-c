@@ -33,6 +33,7 @@ void insert_mime(const char *ext, const char *type) {
 }
 
 void init_mime_types() {
+        printf(" >> Initializing MIME types...");
         insert_mime(".html", "text/html");
         insert_mime(".css", "text/css");
         insert_mime(".js", "application/javascript");
@@ -63,6 +64,7 @@ const char *get_mime_type(const char *filepath) {
 }
 
 void free_mime_types() {
+        printf(" >> Freeing MIME types...");
         for (int i = 0; i < HASH_SIZE; i++) {
                 Mime *entry = mime_table[i];
                 while (entry) {

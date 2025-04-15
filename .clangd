@@ -1,0 +1,4 @@
+# using full path was only thing that worked of -I.
+# I tired './src/server' and 'src/server', niether of which worked
+CompileFlags:
+  Add: -I/home/mattw/dev/c/the-web-in-c/src/server

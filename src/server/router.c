@@ -93,7 +93,6 @@ void serve_file(int client_fd, const char *filepath) {
 
         size_t bytesRead = fread(body, 1, size, file);
         fclose(file);
-        // body[size] = '\0';
 
         if (bytesRead != size) {
                 free(body);
@@ -105,7 +104,6 @@ void serve_file(int client_fd, const char *filepath) {
 
         const char *mime_type = get_mime_type(filepath);
         send_response_binary(client_fd, "200 OK", mime_type, body, size);
-        // send_response(client_fd, "200 OK", mime_type, body);
         free(body);
 }
 
