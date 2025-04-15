@@ -1,15 +1,25 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pthread -g -I./src/server
+CFLAGS = \
+	-Wall \
+	-Wextra \
+	-pthread \
+	-g \
+	-I./src/server \
+	-I./src/server/router \
+	-I./src/server/features/auth \
+	-I./src/server/features/landing
 
 OBJS = \
 	bin/main.o \
 	bin/server.o \
 	bin/request.o \
-	bin/router.o \
 	bin/mime.o \
-	bin/response.o
+	bin/response.o \
+	bin/radix_router.o \
+	bin/auth.o \
+	bin/landing.o
 
-all: server
+all: clean server
 
 
 server: $(OBJS)
@@ -24,14 +34,23 @@ bin/server.o: src/server/server.c src/server/server.h
 bin/request.o: src/server/request.c src/server/request.h
 	$(CC) $(CFLAGS) -c src/server/request.c -o bin/request.o
 
-bin/router.o: src/server/router.c src/server/router.h
-	$(CC) $(CFLAGS) -c src/server/router.c -o bin/router.o
+# bin/router.o: src/server/router.c src/server/router.h
+# 	$(CC) $(CFLAGS) -c src/server/router.c -o bin/router.o
 
 bin/mime.o: src/server/mime.c src/server/mime.h
 	$(CC) $(CFLAGS) -c src/server/mime.c -o bin/mime.o
 
 bin/response.o: src/server/response.c src/server/response.h
 	$(CC) $(CFLAGS) -c src/server/response.c -o bin/response.o
+
+bin/radix_router.o: src/server/router/radix_tree_router.c src/server/router/radix_tree_router.h
+	$(CC) $(CFLAGS) -c src/server/router/radix_tree_router.c -o bin/radix_router.o
+
+bin/auth.o: src/server/features/auth/auth.c src/server/features/auth/auth.h
+	$(CC) $(CFLAGS) -c src/server/features/auth/auth.c -o bin/auth.o
+
+bin/landing.o: src/server/features/landing/landing.c src/server/features/landing/landing.h
+	$(CC) $(CFLAGS) -c src/server/features/landing/landing.c -o bin/landing.o
 
 clean:
 	rm -f *.o bin/*.o bin/server

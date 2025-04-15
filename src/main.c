@@ -1,6 +1,7 @@
 /* main.c */
 
 #include "mime.h"
+#include "radix_tree_router.h"
 #include "server.h"
 #include <execinfo.h>
 #include <signal.h>
@@ -31,10 +32,12 @@ int main() {
 
         // allocate values commonly used
         init_mime_types();
+        init_router();
 
         start_server();
 
         // deallocate values commonly used
+        free_router();
         free_mime_types();
 
         return 0;
