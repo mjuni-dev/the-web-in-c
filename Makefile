@@ -34,9 +34,6 @@ bin/server.o: src/server/server.c src/server/server.h
 bin/request.o: src/server/request.c src/server/request.h
 	$(CC) $(CFLAGS) -c src/server/request.c -o bin/request.o
 
-# bin/router.o: src/server/router.c src/server/router.h
-# 	$(CC) $(CFLAGS) -c src/server/router.c -o bin/router.o
-
 bin/mime.o: src/server/mime.c src/server/mime.h
 	$(CC) $(CFLAGS) -c src/server/mime.c -o bin/mime.o
 
