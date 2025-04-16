@@ -3,7 +3,6 @@
 #include "request.h"
 #include "radix_tree_router.h"
 #include "response.h"
-// #include "router.h"
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>

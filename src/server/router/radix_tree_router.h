@@ -6,10 +6,10 @@
 typedef void (*RouteHandler)(int client_fd, const char *query,
                              const char *body);
 
-typedef struct RadixNode {
+typedef struct s_radix_node {
         char *segment;
         RouteHandler handler;
-        struct RadixNode **children;
+        struct s_radix_node **children;
         int child_count;
 } RadixNode;
 

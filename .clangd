@@ -2,8 +2,10 @@
 # I tired './src/server' and 'src/server', niether of which worked
 CompileFlags:
   Add: [
+    -I/home/mattw/dev/c/the-web-in-c/src,
     -I/home/mattw/dev/c/the-web-in-c/src/server,
     -I/home/mattw/dev/c/the-web-in-c/src/server/router,
+    -I/home/mattw/dev/c/the-web-in-c/src/server/template,
     -I/home/mattw/dev/c/the-web-in-c/src/server/features/auth,
     -I/home/mattw/dev/c/the-web-in-c/src/server/features/landing
   ]

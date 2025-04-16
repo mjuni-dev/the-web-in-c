@@ -3,6 +3,7 @@
 #include "mime.h"
 #include "radix_tree_router.h"
 #include "server.h"
+#include "template.h"
 #include <execinfo.h>
 #include <signal.h>
 #include <stdio.h>
@@ -39,6 +40,7 @@ int main() {
         // deallocate values commonly used
         free_router();
         free_mime_types();
+        free_template_cache();
 
         return 0;
 }
