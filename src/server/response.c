@@ -3,7 +3,6 @@
 #include "response.h"
 #include "mime.h"
 #include "template.h"
-#include "utils.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

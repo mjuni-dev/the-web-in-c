@@ -9,7 +9,7 @@
 #define BUFFER_CHUNK 4096
 #define MAX_INCLUDE_DEPTH 10
 
-#define ROOT_WEB "./src/web"
+#define WEB_ROOT "./src/web/"
 
 typedef struct s_template_cache {
         char *key;
@@ -50,10 +50,11 @@ static char *process_includes(const char *html, int depth) {
 
         // Find all {{> include/path}} patterns
         const char *curr_pos = html;
-        const char *include_start = strstr(curr_pos, "{{>");
+        const char *include_start;
+        const char *include_end;
 
-        while (include_start) {
-                const char *include_end = strstr(include_start, "}}");
+        while ((include_start = strstr(curr_pos, "{{>")) != NULL) {
+                include_end = strstr(include_start, "}}");
                 if (!include_end) {
                         break;
                 }
@@ -87,7 +88,7 @@ static char *process_includes(const char *html, int depth) {
                         component_path[path_len] = '\0';
 
                         // Construct component file path
-                        char full_path[512] = ROOT_WEB;
+                        char full_path[512] = WEB_ROOT;
                         strcat(full_path, component_path);
                         if (!strstr(full_path, ".html")) {
                                 strcat(full_path, ".html");
@@ -179,7 +180,7 @@ static char *inject_content(const char *template, const char *content) {
 char *process_template(const char *filepath, const char *content) {
         // Check if this is a layout or regular page
         int is_layout = 0;
-        const char *layout_prefix = "./src/web/layouts/";
+        const char *layout_prefix = WEB_ROOT "layouts/";
 
         if (strncmp(filepath, layout_prefix, strlen(layout_prefix)) == 0) {
                 is_layout = 1;
